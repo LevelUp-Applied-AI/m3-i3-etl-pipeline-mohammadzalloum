@@ -3,11 +3,23 @@
 
 ## Overview
 
-<!-- What does this pipeline do? -->
+This project builds a Python ETL pipeline for the fictional **Amman Digital Market** database. The pipeline extracts data from PostgreSQL, transforms raw order data into customer-level analytics using Pandas, validates the transformed output with data quality checks, and loads the final result into both a new PostgreSQL table and a CSV file. :contentReference[oaicite:1]{index=1}
+
+The final output summarizes each customer’s purchasing behavior, including:
+- total number of valid orders
+- total revenue
+- average order value
+- top product category by revenue
+
+The pipeline also excludes:
+- cancelled orders
+- suspicious order items where `quantity > 100` :contentReference[oaicite:2]{index=2}
+
 
 ## Setup
 
-1. Start PostgreSQL container:
+1. Start the PostgreSQL container.
+   If port `5432` is available:
    ```bash
    docker run -d --name postgres-m3-int \
      -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres \
@@ -17,8 +29,8 @@
    ```
 2. Load schema and data:
    ```bash
-   psql -h localhost -U postgres -d amman_market -f schema.sql
-   psql -h localhost -U postgres -d amman_market -f seed_data.sql
+PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d amman_market -f schema.sql
+PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d amman_market -f seed_data.sql
    ```
 3. Install dependencies: `pip install -r requirements.txt`
 
@@ -28,15 +40,37 @@
 python etl_pipeline.py
 ```
 
+
 ## Output
 
-<!-- What does customer_analytics.csv contain? -->
+After running the pipeline, the output is saved in two places:
+1.PostgreSQL table: 
+ customer_analytics 
+2.CSV file: 
+ output/customer_analytics.csv 
+
+The output contains these columns:
+   customer_id 
+   customer_name 
+   city 
+   total_orders 
+   total_revenue 
+   avg_order_value 
+   top_category 
+
 
 ## Quality Checks
 
-<!-- What validations are performed and why? -->
+The pipeline validates the transformed customer summary using these checks:
+   no nulls in customer_id
+   no nulls in customer_name
+   total_revenue > 0 for all customers
+   no duplicate customer_id values
+   total_orders > 0 for all customers
 
+Each check is printed as PASS or FAIL. If any critical check fails, the pipeline raises a ValueError.
 ---
+
 
 ## License
 
